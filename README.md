@@ -1,5 +1,7 @@
 # Pomodoro Timer
 
+[![Tests](https://github.com/xiongxianfei/pomodoro-timer-app/actions/workflows/test.yml/badge.svg)](https://github.com/xiongxianfei/pomodoro-timer-app/actions/workflows/test.yml)
+
 A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkinter. Stay focused with timed work sessions, automatic break reminders, sound alerts, and a system tray icon so it never gets in your way.
 
 ## Features
