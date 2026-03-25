@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import tkinter as tk
 import winsound
 
 from constants import PHASE_LABELS, PHASE_COLORS
+from storage import load_settings, save_settings
 from timer import PomodoroTimer
 from tray import TrayIcon, TRAY_AVAILABLE
 from settings_dialog import SettingsDialog
@@ -10,13 +13,14 @@ from settings_dialog import SettingsDialog
 class PomodoroApp:
     """Main application window. Wires together the timer, tray, and settings dialog."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Pomodoro Timer")
         self.root.resizable(False, False)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self.timer = PomodoroTimer(
+            settings=load_settings(),
             on_tick=lambda: self.root.after(0, self._refresh_ui),
             on_complete=lambda: self.root.after(0, self._on_session_complete),
         )
@@ -113,6 +117,7 @@ class PomodoroApp:
         dlg = SettingsDialog(self.root, self.timer.settings)
         if dlg.result:
             self.timer.apply_settings(dlg.result)
+            save_settings(self.timer.settings)
 
         if was_running:
             self.timer.start()
