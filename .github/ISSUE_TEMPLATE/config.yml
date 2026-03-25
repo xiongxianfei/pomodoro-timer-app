@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/xiongxianfei/pomodoro-timer-app/discussions
+    about: Ask questions and discuss the project
