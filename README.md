@@ -16,22 +16,28 @@ A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkint
 - **Session counter** — tracks completed Pomodoros within the current cycle (e.g. `3 / 4`)
 - **Color-coded phases** — red for work, green for short break, blue for long break
 
+## Download
+
+**No Python required.** Grab the latest standalone executable from the [Releases](https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest) page:
+
+1. Go to [Releases](https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest)
+2. Download `PomodoroTimer.exe`
+3. Double-click to run — no installation needed
+
+> **Note:** Windows SmartScreen may show a warning on first launch since the exe is unsigned. Click **More info → Run anyway** to proceed.
+
 ## Requirements
 
-- Windows 11 (uses `winsound` for audio alerts)
-- Python 3.9+
+- Windows 11
 
-## Installation
+## Run from Source
+
+If you prefer to run from source, Python 3.9+ is required:
 
 ```bash
 git clone https://github.com/xiongxianfei/pomodoro-timer-app.git
 cd pomodoro-timer-app
 pip install -r requirements.txt
-```
-
-## Usage
-
-```bash
 python main.py
 ```
 
