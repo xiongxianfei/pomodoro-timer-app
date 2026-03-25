@@ -114,6 +114,10 @@ The GitHub Actions workflow (`.github/workflows/test.yml`) runs on every push, p
 
 All other functionality uses the Python standard library (`tkinter`, `winsound`, `threading`, `time`, `json`, `pathlib`).
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=xiongxianfei/pomodoro-timer-app&type=Date)](https://star-history.com/#xiongxianfei/pomodoro-timer-app&Date)
+
 ## License
 
 MIT
