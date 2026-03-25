@@ -116,7 +116,7 @@ All other functionality uses the Python standard library (`tkinter`, `winsound`,
 
 ## Star History
 
-![Star History Chart](https://starchart.cc/xiongxianfei/pomodoro-timer-app.svg)
+[![Star History Chart](https://api.star-history.com/svg?repos=xiongxianfei/pomodoro-timer-app&type=date&legend=top-left)](https://www.star-history.com/#xiongxianfei/pomodoro-timer-app&type=date&legend=top-left)
 
 ## License
 
