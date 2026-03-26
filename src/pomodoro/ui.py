@@ -10,7 +10,7 @@ from .storage import load_settings, save_settings
 from .timer import PomodoroTimer
 from .tray import TrayIcon, TRAY_AVAILABLE
 from .settings_dialog import SettingsDialog
-from .stats import load_stats, record_pomodoro
+from .stats import Stats, load_stats, record_pomodoro
 from .updater import check_for_update
 
 try:
@@ -45,7 +45,7 @@ class PomodoroApp:
             on_complete=lambda: self.root.after(0, self._on_session_complete),  # type: ignore[arg-type]
         )
 
-        self._stats = load_stats()
+        self._stats: Stats = load_stats()
         self._build_ui()
 
         self.tray = TrayIcon(
