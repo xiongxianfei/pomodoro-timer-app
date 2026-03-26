@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to release (e.g. v1.0.4)"
+        required: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -17,6 +22,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -38,15 +53,17 @@ jobs:
 
       - name: Build installer
         run: |
-          $version = "${{ github.ref_name }}".TrimStart('v')
+          $version = "${{ steps.ver.outputs.tag }}".TrimStart('v')
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=$version installer.iss
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} `
+          $tag = "${{ steps.ver.outputs.tag }}"
+          $version = $tag.TrimStart('v')
+          gh release create $tag `
             dist/PomodoroTimer.exe `
-            Output/PomodoroTimer-Setup-$("${{ github.ref_name }}".TrimStart('v')).exe `
-            --title "${{ github.ref_name }}" `
+            Output/PomodoroTimer-Setup-$version.exe `
+            --title $tag `
             --generate-notes
