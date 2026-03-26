@@ -47,6 +47,32 @@ pip install .
 python main.py
 ```
 
+## Build Locally
+
+### Portable exe (PyInstaller)
+
+```bash
+pip install pyinstaller
+pip install .
+pyinstaller --onefile --windowed --name "PomodoroTimer" --icon=icon.ico --add-data "icon.ico;." main.py
+```
+
+Output: `dist/PomodoroTimer.exe`
+
+### Installer (Inno Setup)
+
+1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php)
+2. Build the exe first (step above)
+3. Compile the installer:
+
+```bash
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=1.0.4 installer.iss
+```
+
+Output: `Output/PomodoroTimer-Setup-1.0.4.exe`
+
+> Both steps run automatically on every tagged release via GitHub Actions.
+
 ### Controls
 
 | Button | Action |
