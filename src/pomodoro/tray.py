@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import threading
+from typing import Any, Callable
 
 try:
     import pystray
@@ -11,13 +14,18 @@ except ImportError:
 class TrayIcon:
     """System tray icon wrapper around pystray."""
 
-    def __init__(self, on_show, on_toggle, on_quit):
-        self._icon = None
+    def __init__(
+        self,
+        on_show: Callable[[], None],
+        on_toggle: Callable[[], None],
+        on_quit: Callable[[], None],
+    ) -> None:
+        self._icon: Any = None
         self._on_show = on_show
         self._on_toggle = on_toggle
         self._on_quit = on_quit
 
-    def start(self, color):
+    def start(self, color: str) -> None:
         if not TRAY_AVAILABLE:
             return
         self._icon = pystray.Icon(
@@ -33,17 +41,17 @@ class TrayIcon:
         )
         threading.Thread(target=self._icon.run, daemon=True).start()
 
-    def update_color(self, color):
+    def update_color(self, color: str) -> None:
         if self._icon:
             self._icon.icon = self._make_image(color)
 
-    def stop(self):
+    def stop(self) -> None:
         if self._icon:
             self._icon.stop()
             self._icon = None
 
     @staticmethod
-    def _make_image(color):
+    def _make_image(color: str) -> Any:
         size = 64
         img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         ImageDraw.Draw(img).ellipse([4, 4, size - 4, size - 4], fill=color)

@@ -39,8 +39,8 @@ class PomodoroApp:
 
         self.timer = PomodoroTimer(
             settings=load_settings(),
-            on_tick=lambda: self.root.after(0, self._refresh_ui),
-            on_complete=lambda: self.root.after(0, self._on_session_complete),
+            on_tick=lambda: self.root.after(0, self._refresh_ui),  # type: ignore[arg-type]
+            on_complete=lambda: self.root.after(0, self._on_session_complete),  # type: ignore[arg-type]
         )
 
         self._build_ui()
@@ -59,7 +59,7 @@ class PomodoroApp:
     # UI construction
     # ------------------------------------------------------------------
 
-    def _build_ui(self):
+    def _build_ui(self) -> None:
         root = self.root
         root.configure(bg="#2c2c2c")
         pad = {"padx": 20, "pady": 6}
@@ -112,22 +112,22 @@ class PomodoroApp:
     # Actions
     # ------------------------------------------------------------------
 
-    def toggle(self):
+    def toggle(self) -> None:
         if self.timer.running:
             self.timer.stop()
         else:
             self.timer.start()
         self._refresh_ui()
 
-    def skip(self):
+    def skip(self) -> None:
         self.timer.skip()
         self._refresh_ui()
 
-    def reset(self):
+    def reset(self) -> None:
         self.timer.reset()
         self._refresh_ui()
 
-    def open_settings(self):
+    def open_settings(self) -> None:
         was_running = self.timer.running
         if was_running:
             self.timer.stop()
@@ -146,7 +146,7 @@ class PomodoroApp:
     # Event handlers
     # ------------------------------------------------------------------
 
-    def _on_session_complete(self):
+    def _on_session_complete(self) -> None:
         winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS | winsound.SND_ASYNC)
         self.show_window()
         self.timer.advance_phase()
@@ -169,7 +169,7 @@ class PomodoroApp:
         except Exception:
             pass
 
-    def _on_close(self):
+    def _on_close(self) -> None:
         if TRAY_AVAILABLE:
             self.root.withdraw()
         else:
@@ -179,12 +179,12 @@ class PomodoroApp:
     # Window management
     # ------------------------------------------------------------------
 
-    def show_window(self):
+    def show_window(self) -> None:
         self.root.deiconify()
         self.root.lift()
         self.root.focus_force()
 
-    def quit_app(self):
+    def quit_app(self) -> None:
         self.timer.stop()
         self.tray.stop()
         self.root.destroy()
@@ -193,7 +193,7 @@ class PomodoroApp:
     # UI refresh
     # ------------------------------------------------------------------
 
-    def _refresh_ui(self):
+    def _refresh_ui(self) -> None:
         mins, secs = divmod(self.timer.remaining, 60)
         self._time_var.set(f"{mins:02d}:{secs:02d}")
         self._phase_var.set(PHASE_LABELS[self.timer.phase])
@@ -210,5 +210,5 @@ class PomodoroApp:
     # Main loop
     # ------------------------------------------------------------------
 
-    def run(self):
+    def run(self) -> None:
         self.root.mainloop()
