@@ -1,6 +1,7 @@
 # Pomodoro Timer
 
 [![Tests](https://github.com/xiongxianfei/pomodoro-timer-app/actions/workflows/test.yml/badge.svg)](https://github.com/xiongxianfei/pomodoro-timer-app/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/xiongxianfei/pomodoro-timer-app/branch/main/graph/badge.svg)](https://codecov.io/gh/xiongxianfei/pomodoro-timer-app)
 
 A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkinter. Stay focused with timed work sessions, automatic break reminders, sound alerts, and a system tray icon so it never gets in your way.
 
@@ -8,7 +9,7 @@ A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkint
 
 - **Pomodoro cycle** — 25-min work sessions alternate with short breaks; every 4th session triggers a long break
 - **Auto-advance** — the next phase starts automatically when a session ends
-- **Sound alert** — plays a system sound at the end of each session
+- **Sound + toast alert** — plays a system sound and shows a Windows toast notification on session end
 - **Auto-restore** — the window pops to the foreground when a session ends, even if minimized
 - **System tray** — closing the window sends it to the tray; the timer keeps running in the background
 - **Persistent settings** — durations are saved to disk and restored on next launch
@@ -37,7 +38,7 @@ If you prefer to run from source, Python 3.9+ is required:
 ```bash
 git clone https://github.com/xiongxianfei/pomodoro-timer-app.git
 cd pomodoro-timer-app
-pip install -r requirements.txt
+pip install .
 python main.py
 ```
 
@@ -111,6 +112,7 @@ The GitHub Actions workflow (`.github/workflows/test.yml`) runs on every push, p
 |---------|---------|
 | [pystray](https://github.com/moses-palmer/pystray) | System tray icon |
 | [Pillow](https://python-pillow.org/) | Generate tray icon image programmatically |
+| [winotify](https://github.com/versa-synnc/winotify) | Windows toast notifications |
 
 All other functionality uses the Python standard library (`tkinter`, `winsound`, `threading`, `time`, `json`, `pathlib`).
 

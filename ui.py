@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import sys
 import tkinter as tk
 import winsound
 
@@ -8,6 +10,18 @@ from storage import load_settings, save_settings
 from timer import PomodoroTimer
 from tray import TrayIcon, TRAY_AVAILABLE
 from settings_dialog import SettingsDialog
+
+try:
+    from winotify import Notification as WinNotification
+    TOAST_AVAILABLE = True
+except ImportError:
+    TOAST_AVAILABLE = False
+
+
+def _resource_path(filename: str) -> str:
+    """Resolve path to a bundled resource (works for both dev and PyInstaller exe)."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, filename)
 
 
 class PomodoroApp:
@@ -18,6 +32,10 @@ class PomodoroApp:
         self.root.title("Pomodoro Timer")
         self.root.resizable(False, False)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        try:
+            self.root.iconbitmap(_resource_path("icon.ico"))
+        except Exception:
+            pass
 
         self.timer = PomodoroTimer(
             settings=load_settings(),
@@ -132,8 +150,24 @@ class PomodoroApp:
         winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS | winsound.SND_ASYNC)
         self.show_window()
         self.timer.advance_phase()
+        self._show_toast()
         self.timer.start()
         self._refresh_ui()
+
+    def _show_toast(self) -> None:
+        if not TOAST_AVAILABLE:
+            return
+        try:
+            toast = WinNotification(
+                app_id="Pomodoro Timer",
+                title="Session Complete",
+                msg=f"Starting {PHASE_LABELS[self.timer.phase]}",
+                duration="short",
+                icon=_resource_path("icon.ico"),
+            )
+            toast.show()
+        except Exception:
+            pass
 
     def _on_close(self):
         if TRAY_AVAILABLE:
