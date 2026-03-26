@@ -36,5 +36,12 @@ ignore_missing_imports = true
 module = "pomodoro.ui"
 ignore_errors = true
 
+[tool.coverage.run]
+omit = [
+    "src/pomodoro/ui.py",
+    "src/pomodoro/tray.py",
+    "src/pomodoro/settings_dialog.py",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
