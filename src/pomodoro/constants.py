@@ -1,4 +1,4 @@
-APP_VERSION: str = "1.0.3"
+APP_VERSION: str = "1.0.4"
 
 WORK: str = "work"
 SHORT_BREAK: str = "short_break"
