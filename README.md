@@ -75,20 +75,23 @@ Settings are validated on save and persisted to `%APPDATA%\pomodoro\settings.jso
 ```
 pomodoro-timer-app/
 ├── main.py              # Entry point
-├── constants.py         # Phase constants, colors, default settings, bounds
-├── timer.py             # PomodoroTimer — pure countdown logic, no GUI
-├── storage.py           # load_settings / save_settings — JSON persistence
-├── settings_dialog.py   # SettingsDialog — modal form with bounds validation
-├── tray.py              # TrayIcon — pystray wrapper
-├── ui.py                # PomodoroApp — window and wiring
-├── mypy.ini             # Static type-checking configuration
-├── requirements.txt     # Runtime dependencies
+├── pyproject.toml       # Build config, dependencies, mypy & pytest settings
+├── src/
+│   └── pomodoro/
+│       ├── __init__.py
+│       ├── constants.py         # Phase constants, colors, default settings, bounds
+│       ├── timer.py             # PomodoroTimer — pure countdown logic, no GUI
+│       ├── storage.py           # load_settings / save_settings — JSON persistence
+│       ├── settings_dialog.py   # SettingsDialog — modal form with bounds validation
+│       ├── tray.py              # TrayIcon — pystray wrapper
+│       └── ui.py                # PomodoroApp — window and wiring
 ├── tests/
 │   ├── test_constants.py
 │   └── test_timer.py
 └── .github/
     └── workflows/
-        └── test.yml     # CI: type check + tests on push, PR, and daily schedule
+        ├── test.yml     # CI: type check + tests on push, PR, and daily schedule
+        └── release.yml  # Build exe and publish GitHub release on tag push
 ```
 
 ## Architecture

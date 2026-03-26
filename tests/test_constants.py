@@ -1,9 +1,5 @@
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 import unittest
-from constants import (
+from pomodoro.constants import (
     WORK, SHORT_BREAK, LONG_BREAK,
     PHASE_LABELS, PHASE_COLORS, DEFAULT_SETTINGS,
 )
