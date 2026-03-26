@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-03-26
+
+### Added
+- Clickable update banner — clicking the "Update available" label opens the releases page in the browser (#10)
+- Unit tests for `updater.py` — 11 cases covering version parsing and HTTP callback behaviour (#10)
+- `CHANGELOG.md` (#11)
+
 ## [1.0.3] - 2026-03-26
 
 ### Added
@@ -52,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PyInstaller standalone Windows exe, released via GitHub Actions on tag push
 - GitHub community files: issue templates, PR template, `SECURITY.md`, `CONTRIBUTING.md`, `dependabot.yml`
 
-[Unreleased]: https://github.com/xiongxianfei/pomodoro-timer-app/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/xiongxianfei/pomodoro-timer-app/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/xiongxianfei/pomodoro-timer-app/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/xiongxianfei/pomodoro-timer-app/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/xiongxianfei/pomodoro-timer-app/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/xiongxianfei/pomodoro-timer-app/compare/v1.0.0...v1.0.1
