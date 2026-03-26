@@ -5,6 +5,8 @@ import sys
 import tkinter as tk
 import winsound
 
+import webbrowser
+
 from .constants import APP_VERSION, PHASE_LABELS, PHASE_COLORS, WORK
 from .storage import load_settings, save_settings
 from .timer import PomodoroTimer
@@ -119,10 +121,13 @@ class PomodoroApp:
             font=("Segoe UI", 9), bg="#2c2c2c", fg="#7f8c8d",
         ).pack(pady=(0, 4))
 
-        tk.Label(
+        self._update_label = tk.Label(
             root, textvariable=self._update_var,
             font=("Segoe UI", 9), bg="#2c2c2c", fg="#f39c12",
-        ).pack(pady=(0, 12))
+            cursor="hand2",
+        )
+        self._update_label.pack(pady=(0, 12))
+        self._update_label.bind("<Button-1>", self._open_releases_page)
 
     # ------------------------------------------------------------------
     # Actions
@@ -174,7 +179,11 @@ class PomodoroApp:
         self._refresh_ui()
 
     def _on_update_available(self, version: str) -> None:
-        self.root.after(0, lambda: self._update_var.set(f"Update available: {version}  —  github.com/xiongxianfei/pomodoro-timer-app"))
+        self.root.after(0, lambda: self._update_var.set(f"Update available: {version} — click to download"))
+
+    def _open_releases_page(self, _event: object) -> None:
+        if self._update_var.get():
+            webbrowser.open("https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest")
 
     def _show_toast(self) -> None:
         if not TOAST_AVAILABLE:
