@@ -5,11 +5,13 @@ import sys
 import tkinter as tk
 import winsound
 
-from .constants import PHASE_LABELS, PHASE_COLORS
+from .constants import APP_VERSION, PHASE_LABELS, PHASE_COLORS, WORK
 from .storage import load_settings, save_settings
 from .timer import PomodoroTimer
 from .tray import TrayIcon, TRAY_AVAILABLE
 from .settings_dialog import SettingsDialog
+from .stats import load_stats, record_pomodoro
+from .updater import check_for_update
 
 try:
     from winotify import Notification as WinNotification
@@ -43,6 +45,7 @@ class PomodoroApp:
             on_complete=lambda: self.root.after(0, self._on_session_complete),  # type: ignore[arg-type]
         )
 
+        self._stats = load_stats()
         self._build_ui()
 
         self.tray = TrayIcon(
@@ -54,6 +57,7 @@ class PomodoroApp:
             self.tray.start(PHASE_COLORS[self.timer.phase])
 
         self._refresh_ui()
+        check_for_update(APP_VERSION, self._on_update_available)
 
     # ------------------------------------------------------------------
     # UI construction
@@ -67,6 +71,8 @@ class PomodoroApp:
         self._phase_var = tk.StringVar()
         self._time_var = tk.StringVar()
         self._counter_var = tk.StringVar()
+        self._stats_var = tk.StringVar()
+        self._update_var = tk.StringVar()
 
         tk.Label(
             root, textvariable=self._phase_var,
@@ -106,7 +112,17 @@ class PomodoroApp:
         tk.Button(
             root, text="Settings", width=10, command=self.open_settings,
             bg="#34495e", fg="white", relief="flat", font=("Segoe UI", 11), cursor="hand2",
-        ).pack(pady=(2, 16))
+        ).pack(pady=(2, 8))
+
+        tk.Label(
+            root, textvariable=self._stats_var,
+            font=("Segoe UI", 9), bg="#2c2c2c", fg="#7f8c8d",
+        ).pack(pady=(0, 4))
+
+        tk.Label(
+            root, textvariable=self._update_var,
+            font=("Segoe UI", 9), bg="#2c2c2c", fg="#f39c12",
+        ).pack(pady=(0, 12))
 
     # ------------------------------------------------------------------
     # Actions
@@ -149,10 +165,16 @@ class PomodoroApp:
     def _on_session_complete(self) -> None:
         winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS | winsound.SND_ASYNC)
         self.show_window()
+        was_work = self.timer.phase == WORK
         self.timer.advance_phase()
+        if was_work:
+            self._stats = record_pomodoro()
         self._show_toast()
         self.timer.start()
         self._refresh_ui()
+
+    def _on_update_available(self, version: str) -> None:
+        self.root.after(0, lambda: self._update_var.set(f"Update available: {version}  —  github.com/xiongxianfei/pomodoro-timer-app"))
 
     def _show_toast(self) -> None:
         if not TOAST_AVAILABLE:
@@ -200,6 +222,9 @@ class PomodoroApp:
 
         done, total = self.timer.session_display
         self._counter_var.set(f"Pomodoros: {done} / {total}")
+        self._stats_var.set(
+            f"Today: {self._stats['today']}  |  All-time: {self._stats['total']}"
+        )
 
         color = PHASE_COLORS[self.timer.phase]
         self._time_label.configure(fg=color)
