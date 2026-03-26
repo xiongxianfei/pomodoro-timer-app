@@ -5,6 +5,8 @@
 
 A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkinter. Stay focused with timed work sessions, automatic break reminders, sound alerts, and a system tray icon so it never gets in your way.
 
+![Pomodoro Timer screenshot](docs/screenshot.png)
+
 ## Features
 
 - **Pomodoro cycle** — 25-min work sessions alternate with short breaks; every 4th session triggers a long break
@@ -15,15 +17,18 @@ A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkint
 - **Persistent settings** — durations are saved to disk and restored on next launch
 - **Validated settings** — each value is range-checked; invalid input shows a descriptive error
 - **Session counter** — tracks completed Pomodoros within the current cycle (e.g. `3 / 4`)
+- **Statistics** — shows today's and all-time completed Pomodoro counts, persisted across restarts
+- **Auto-update check** — notifies you in-app when a new version is available
 - **Color-coded phases** — red for work, green for short break, blue for long break
 
 ## Download
 
-**No Python required.** Grab the latest standalone executable from the [Releases](https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest) page:
+**No Python required.** Grab the latest build from the [Releases](https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest) page:
 
-1. Go to [Releases](https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest)
-2. Download `PomodoroTimer.exe`
-3. Double-click to run — no installation needed
+| Option | File | Notes |
+|--------|------|-------|
+| **Installer** (recommended) | `PomodoroTimer-Setup-x.y.z.exe` | Adds Start Menu shortcut, optional desktop icon and run-at-login |
+| **Portable** | `PomodoroTimer.exe` | Single file, no installation needed |
 
 > **Note:** Windows SmartScreen may show a warning on first launch since the exe is unsigned. Click **More info → Run anyway** to proceed.
 
