@@ -36,10 +36,17 @@ jobs:
           --add-data "icon.ico;."
           main.py
 
+      - name: Build installer
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=$version installer.iss
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} dist/PomodoroTimer.exe `
+          gh release create ${{ github.ref_name }} `
+            dist/PomodoroTimer.exe `
+            Output/PomodoroTimer-Setup-$("${{ github.ref_name }}".TrimStart('v')).exe `
             --title "${{ github.ref_name }}" `
             --generate-notes

@@ -1,3 +1,5 @@
+APP_VERSION: str = "1.0.3"
+
 WORK: str = "work"
 SHORT_BREAK: str = "short_break"
 LONG_BREAK: str = "long_break"
