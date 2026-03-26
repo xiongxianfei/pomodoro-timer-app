@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 
-from constants import DEFAULT_SETTINGS, SETTINGS_BOUNDS
+from .constants import DEFAULT_SETTINGS, SETTINGS_BOUNDS
 
 
 def _config_path() -> Path:

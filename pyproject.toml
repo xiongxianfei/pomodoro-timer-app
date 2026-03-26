@@ -22,8 +22,8 @@ dev = [
     "mypy>=1.0",
 ]
 
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.mypy]
 python_version = "3.9"

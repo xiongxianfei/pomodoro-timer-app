@@ -35,10 +35,10 @@ jobs:
           pip install pystray || true
 
       - name: Type check
-        run: mypy constants.py timer.py storage.py settings_dialog.py
+        run: mypy src/pomodoro/
 
       - name: Run tests with coverage
-        run: pytest tests/ -v --cov=constants --cov=timer --cov-report=xml
+        run: pytest tests/ -v --cov=pomodoro --cov-report=xml
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.12'

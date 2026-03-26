@@ -5,11 +5,11 @@ import sys
 import tkinter as tk
 import winsound
 
-from constants import PHASE_LABELS, PHASE_COLORS
-from storage import load_settings, save_settings
-from timer import PomodoroTimer
-from tray import TrayIcon, TRAY_AVAILABLE
-from settings_dialog import SettingsDialog
+from .constants import PHASE_LABELS, PHASE_COLORS
+from .storage import load_settings, save_settings
+from .timer import PomodoroTimer
+from .tray import TrayIcon, TRAY_AVAILABLE
+from .settings_dialog import SettingsDialog
 
 try:
     from winotify import Notification as WinNotification
@@ -20,7 +20,7 @@ except ImportError:
 
 def _resource_path(filename: str) -> str:
     """Resolve path to a bundled resource (works for both dev and PyInstaller exe)."""
-    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     return os.path.join(base, filename)
 
 

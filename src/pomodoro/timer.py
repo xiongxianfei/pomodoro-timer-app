@@ -4,7 +4,7 @@ import threading
 import time
 from typing import Callable
 
-from constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK
+from .constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK
 
 
 class PomodoroTimer:

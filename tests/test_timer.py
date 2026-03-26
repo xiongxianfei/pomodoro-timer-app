@@ -1,10 +1,6 @@
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 import unittest
-from timer import PomodoroTimer
-from constants import WORK, SHORT_BREAK, LONG_BREAK
+from pomodoro.timer import PomodoroTimer
+from pomodoro.constants import WORK, SHORT_BREAK, LONG_BREAK
 
 
 class TestInitialState(unittest.TestCase):
