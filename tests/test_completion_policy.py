@@ -192,9 +192,16 @@ class TestTrayIconContract(unittest.TestCase):
         sys.modules.pop("pomodoro.tray", None)
 
     def test_tray_methods_are_noops_when_unavailable(self):
-        tray = importlib.import_module("pomodoro.tray")
+        real_import = __import__
 
-        with patch.object(tray, "TRAY_AVAILABLE", False):
+        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name in {"pystray", "PIL"}:
+                raise ImportError(name)
+            return real_import(name, globals, locals, fromlist, level)
+
+        with patch("builtins.__import__", side_effect=fake_import):
+            sys.modules.pop("pomodoro.tray", None)
+            tray = importlib.import_module("pomodoro.tray")
             icon = tray.TrayIcon()
             icon.start("#00ff00", "Work Session - 25:00 left")
             icon.update_color("#ff0000")
@@ -202,6 +209,8 @@ class TestTrayIconContract(unittest.TestCase):
             icon.stop()
 
             self.assertIsNone(icon._icon)
+
+        sys.modules.pop("pomodoro.tray", None)
 
 
 if __name__ == "__main__":
