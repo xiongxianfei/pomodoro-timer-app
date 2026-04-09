@@ -4,7 +4,19 @@ import json
 import os
 from pathlib import Path
 
-from .constants import DEFAULT_SETTINGS, SETTINGS_BOUNDS
+from .constants import (
+    DEFAULT_SETTINGS,
+    NOTIFICATION_MODES,
+    SETTINGS_BOUNDS,
+    AppSettings,
+)
+
+BOOL_SETTINGS = (
+    "restore_window_on_complete",
+    "auto_start_next_phase",
+    "minimize_to_tray_on_close",
+    "show_countdown_in_tray",
+)
 
 
 def _config_path() -> Path:
@@ -15,7 +27,7 @@ def _config_path() -> Path:
     return base / "pomodoro" / "settings.json"
 
 
-def load_settings() -> dict[str, int]:
+def load_settings() -> AppSettings:
     """Load settings from disk, falling back to defaults on any error."""
     path = _config_path()
     if not path.exists():
@@ -29,15 +41,22 @@ def load_settings() -> dict[str, int]:
     if not isinstance(data, dict):
         return dict(DEFAULT_SETTINGS)
 
-    result = dict(DEFAULT_SETTINGS)
+    result: AppSettings = dict(DEFAULT_SETTINGS)
     for key, (lo, hi) in SETTINGS_BOUNDS.items():
         value = data.get(key)
-        if isinstance(value, int):
+        if isinstance(value, int) and not isinstance(value, bool):
             result[key] = max(lo, min(hi, value))
+    for key in BOOL_SETTINGS:
+        value = data.get(key)
+        if isinstance(value, bool):
+            result[key] = value
+    value = data.get("notification_mode")
+    if isinstance(value, str) and value in NOTIFICATION_MODES:
+        result["notification_mode"] = value
     return result
 
 
-def save_settings(settings: dict[str, int]) -> None:
+def save_settings(settings: AppSettings) -> None:
     """Persist settings to disk. Silently ignores write errors."""
     path = _config_path()
     try:

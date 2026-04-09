@@ -1,7 +1,7 @@
 import unittest
 from pomodoro.constants import (
     WORK, SHORT_BREAK, LONG_BREAK,
-    PHASE_LABELS, PHASE_COLORS, DEFAULT_SETTINGS,
+    PHASE_LABELS, PHASE_COLORS, DEFAULT_SETTINGS, SETTINGS_BOUNDS,
 )
 
 
@@ -25,16 +25,44 @@ class TestPhaseConstants(unittest.TestCase):
 
 
 class TestDefaultSettings(unittest.TestCase):
-    REQUIRED_KEYS = ["work_minutes", "short_break_minutes", "long_break_minutes", "long_break_after"]
+    REQUIRED_KEYS = [
+        "work_minutes",
+        "short_break_minutes",
+        "long_break_minutes",
+        "long_break_after",
+        "restore_window_on_complete",
+        "notification_mode",
+        "repeat_after_minutes",
+        "auto_start_next_phase",
+        "minimize_to_tray_on_close",
+        "show_countdown_in_tray",
+    ]
 
     def test_all_required_keys_present(self):
         for key in self.REQUIRED_KEYS:
             self.assertIn(key, DEFAULT_SETTINGS)
 
-    def test_all_values_are_positive_integers(self):
-        for key, value in DEFAULT_SETTINGS.items():
+    def test_integer_defaults_remain_positive_integers(self):
+        for key in ("work_minutes", "short_break_minutes", "long_break_minutes", "long_break_after", "repeat_after_minutes"):
+            value = DEFAULT_SETTINGS[key]
             self.assertIsInstance(value, int, f"{key} should be int")
             self.assertGreater(value, 0, f"{key} should be positive")
+
+    def test_bool_defaults_are_booleans(self):
+        for key in (
+            "restore_window_on_complete",
+            "auto_start_next_phase",
+            "minimize_to_tray_on_close",
+            "show_countdown_in_tray",
+        ):
+            self.assertIsInstance(DEFAULT_SETTINGS[key], bool, f"{key} should be bool")
+
+    def test_notification_mode_default_is_valid(self):
+        self.assertEqual(DEFAULT_SETTINGS["notification_mode"], "toast")
+
+    def test_repeat_after_minutes_is_bounded(self):
+        self.assertIn("repeat_after_minutes", SETTINGS_BOUNDS)
+        self.assertEqual(SETTINGS_BOUNDS["repeat_after_minutes"], (1, 10))
 
     def test_work_duration_is_standard(self):
         self.assertEqual(DEFAULT_SETTINGS["work_minutes"], 25)

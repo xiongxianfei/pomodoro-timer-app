@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Literal, TypedDict
+
 APP_VERSION: str = "1.0.4"
 
 WORK: str = "work"
@@ -16,11 +20,33 @@ PHASE_COLORS: dict[str, str] = {
     LONG_BREAK: "#2980b9",
 }
 
-DEFAULT_SETTINGS: dict[str, int] = {
+NotificationMode = Literal["toast", "toast_sound", "toast_sound_repeat"]
+
+
+class AppSettings(TypedDict):
+    work_minutes: int
+    short_break_minutes: int
+    long_break_minutes: int
+    long_break_after: int
+    restore_window_on_complete: bool
+    notification_mode: NotificationMode
+    repeat_after_minutes: int
+    auto_start_next_phase: bool
+    minimize_to_tray_on_close: bool
+    show_countdown_in_tray: bool
+
+
+DEFAULT_SETTINGS: AppSettings = {
     "work_minutes": 25,
     "short_break_minutes": 5,
     "long_break_minutes": 15,
     "long_break_after": 4,
+    "restore_window_on_complete": False,
+    "notification_mode": "toast",
+    "repeat_after_minutes": 2,
+    "auto_start_next_phase": True,
+    "minimize_to_tray_on_close": True,
+    "show_countdown_in_tray": True,
 }
 
 # Inclusive (min, max) bounds for each setting
@@ -29,4 +55,11 @@ SETTINGS_BOUNDS: dict[str, tuple[int, int]] = {
     "short_break_minutes": (1, 60),
     "long_break_minutes":  (1, 120),
     "long_break_after":    (1, 10),
+    "repeat_after_minutes": (1, 10),
 }
+
+NOTIFICATION_MODES: tuple[NotificationMode, ...] = (
+    "toast",
+    "toast_sound",
+    "toast_sound_repeat",
+)

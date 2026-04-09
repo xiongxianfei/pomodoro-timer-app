@@ -75,6 +75,25 @@ class TestLoadSettings(unittest.TestCase):
                 result = load_settings()
         self.assertEqual(result["work_minutes"], DEFAULT_SETTINGS["work_minutes"])
 
+    def test_invalid_bool_values_fall_back_to_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            path.write_text(json.dumps({"auto_start_next_phase": 1}))
+            with patch("pomodoro.storage._config_path", return_value=path):
+                result = load_settings()
+        self.assertEqual(
+            result["auto_start_next_phase"],
+            DEFAULT_SETTINGS["auto_start_next_phase"],
+        )
+
+    def test_invalid_notification_mode_falls_back_to_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            path.write_text(json.dumps({"notification_mode": "loud"}))
+            with patch("pomodoro.storage._config_path", return_value=path):
+                result = load_settings()
+        self.assertEqual(result["notification_mode"], DEFAULT_SETTINGS["notification_mode"])
+
     def test_partial_settings_use_defaults_for_missing_keys(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "settings.json"
@@ -85,6 +104,31 @@ class TestLoadSettings(unittest.TestCase):
         self.assertEqual(
             result["short_break_minutes"], DEFAULT_SETTINGS["short_break_minutes"]
         )
+
+    def test_loads_new_setting_fields(self) -> None:
+        data = {
+            "work_minutes": 30,
+            "short_break_minutes": 10,
+            "long_break_minutes": 20,
+            "long_break_after": 3,
+            "restore_window_on_complete": True,
+            "notification_mode": "toast_sound",
+            "repeat_after_minutes": 4,
+            "auto_start_next_phase": False,
+            "minimize_to_tray_on_close": False,
+            "show_countdown_in_tray": False,
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            path.write_text(json.dumps(data))
+            with patch("pomodoro.storage._config_path", return_value=path):
+                result = load_settings()
+        self.assertEqual(result["restore_window_on_complete"], True)
+        self.assertEqual(result["notification_mode"], "toast_sound")
+        self.assertEqual(result["repeat_after_minutes"], 4)
+        self.assertEqual(result["auto_start_next_phase"], False)
+        self.assertEqual(result["minimize_to_tray_on_close"], False)
+        self.assertEqual(result["show_countdown_in_tray"], False)
 
 
 class TestSaveSettings(unittest.TestCase):
@@ -107,6 +151,30 @@ class TestSaveSettings(unittest.TestCase):
                 save_settings(settings)
                 result = load_settings()
         self.assertEqual(result["long_break_minutes"], 20)
+
+    def test_roundtrip_persists_new_setting_fields(self) -> None:
+        settings = dict(DEFAULT_SETTINGS)
+        settings.update(
+            {
+                "restore_window_on_complete": True,
+                "notification_mode": "toast_sound_repeat",
+                "repeat_after_minutes": 6,
+                "auto_start_next_phase": False,
+                "minimize_to_tray_on_close": False,
+                "show_countdown_in_tray": False,
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            with patch("pomodoro.storage._config_path", return_value=path):
+                save_settings(settings)
+                result = load_settings()
+        self.assertEqual(result["restore_window_on_complete"], True)
+        self.assertEqual(result["notification_mode"], "toast_sound_repeat")
+        self.assertEqual(result["repeat_after_minutes"], 6)
+        self.assertEqual(result["auto_start_next_phase"], False)
+        self.assertEqual(result["minimize_to_tray_on_close"], False)
+        self.assertEqual(result["show_countdown_in_tray"], False)
 
     def test_silently_ignores_write_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
