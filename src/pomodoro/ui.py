@@ -4,10 +4,16 @@ import os
 import sys
 import tkinter as tk
 import winsound
-
 import webbrowser
 
 from .constants import APP_VERSION, PHASE_LABELS, PHASE_COLORS, WORK
+from .completion_policy import (
+    CompletionDecision,
+    ReminderState,
+    build_completion_decision,
+    format_tray_status,
+    should_schedule_repeat,
+)
 from .storage import load_settings, save_settings
 from .timer import PomodoroTimer
 from .tray import TrayIcon, TRAY_AVAILABLE
@@ -31,6 +37,8 @@ def _resource_path(filename: str) -> str:
 class PomodoroApp:
     """Main application window. Wires together the timer, tray, and settings dialog."""
 
+    TRAY_TITLE = "Pomodoro Timer"
+
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Pomodoro Timer")
@@ -41,22 +49,28 @@ class PomodoroApp:
         except Exception:
             pass
 
+        settings = load_settings()
         self.timer = PomodoroTimer(
-            settings=load_settings(),
+            settings=settings,
             on_tick=lambda: self.root.after(0, self._refresh_ui),  # type: ignore[arg-type]
             on_complete=lambda: self.root.after(0, self._on_session_complete),  # type: ignore[arg-type]
         )
 
         self._stats: Stats = load_stats()
+        self._repeat_reminder = ReminderState()
         self._build_ui()
 
         self.tray = TrayIcon(
-            on_show=lambda: self.root.after(0, self.show_window),
+            on_show=lambda: self.root.after(0, self._show_window_from_interaction),
             on_toggle=lambda: self.root.after(0, self.toggle),
+            on_skip=lambda: self.root.after(0, self.skip),
+            on_reset=lambda: self.root.after(0, self.reset),
+            on_add_minute=lambda: self.root.after(0, self.add_minute),
+            on_settings=lambda: self.root.after(0, self.open_settings),
             on_quit=lambda: self.root.after(0, self.quit_app),
         )
         if TRAY_AVAILABLE:
-            self.tray.start(PHASE_COLORS[self.timer.phase])
+            self.tray.start(PHASE_COLORS[self.timer.phase], self._tray_status_text())
 
         self._refresh_ui()
         check_for_update(APP_VERSION, self._on_update_available)
@@ -134,6 +148,7 @@ class PomodoroApp:
     # ------------------------------------------------------------------
 
     def toggle(self) -> None:
+        self._cancel_pending_repeat_reminder()
         if self.timer.running:
             self.timer.stop()
         else:
@@ -141,14 +156,22 @@ class PomodoroApp:
         self._refresh_ui()
 
     def skip(self) -> None:
+        self._cancel_pending_repeat_reminder()
         self.timer.skip()
         self._refresh_ui()
 
     def reset(self) -> None:
+        self._cancel_pending_repeat_reminder()
         self.timer.reset()
         self._refresh_ui()
 
+    def add_minute(self) -> None:
+        self._cancel_pending_repeat_reminder()
+        self.timer.add_minutes(1)
+        self._refresh_ui()
+
     def open_settings(self) -> None:
+        self._cancel_pending_repeat_reminder()
         was_running = self.timer.running
         if was_running:
             self.timer.stop()
@@ -168,14 +191,21 @@ class PomodoroApp:
     # ------------------------------------------------------------------
 
     def _on_session_complete(self) -> None:
-        winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS | winsound.SND_ASYNC)
-        self.show_window()
         was_work = self.timer.phase == WORK
-        self.timer.advance_phase()
+        decision = build_completion_decision(self.timer.settings)
+        self._cancel_pending_repeat_reminder()
+        self.timer.running = False
+        self._notify_completion(decision)
         if was_work:
             self._stats = record_pomodoro()
-        self._show_toast()
-        self.timer.start()
+        self.timer.advance_phase()
+        if decision.show_toast:
+            self._show_toast()
+        if decision.restore_window:
+            self.show_window()
+        self._schedule_repeat_reminder(decision)
+        if decision.auto_start_next_phase:
+            self.timer.start()
         self._refresh_ui()
 
     def _on_update_available(self, version: str) -> None:
@@ -185,6 +215,12 @@ class PomodoroApp:
         if self._update_var.get():
             webbrowser.open("https://github.com/xiongxianfei/pomodoro-timer-app/releases/latest")
 
+    def _play_sound(self) -> None:
+        try:
+            winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS | winsound.SND_ASYNC)
+        except RuntimeError:
+            pass
+
     def _show_toast(self) -> None:
         if not TOAST_AVAILABLE:
             return
@@ -192,7 +228,7 @@ class PomodoroApp:
             toast = WinNotification(
                 app_id="Pomodoro Timer",
                 title="Session Complete",
-                msg=f"Starting {PHASE_LABELS[self.timer.phase]}",
+                msg=f"Next: {PHASE_LABELS[self.timer.phase]}",
                 duration="short",
                 icon=_resource_path("icon.ico"),
             )
@@ -201,7 +237,8 @@ class PomodoroApp:
             pass
 
     def _on_close(self) -> None:
-        if TRAY_AVAILABLE:
+        self._cancel_pending_repeat_reminder()
+        if TRAY_AVAILABLE and self.timer.settings["minimize_to_tray_on_close"]:
             self.root.withdraw()
         else:
             self.quit_app()
@@ -215,7 +252,12 @@ class PomodoroApp:
         self.root.lift()
         self.root.focus_force()
 
+    def _show_window_from_interaction(self) -> None:
+        self._cancel_pending_repeat_reminder()
+        self.show_window()
+
     def quit_app(self) -> None:
+        self._cancel_pending_repeat_reminder()
         self.timer.stop()
         self.tray.stop()
         self.root.destroy()
@@ -239,6 +281,39 @@ class PomodoroApp:
         self._time_label.configure(fg=color)
         self._start_btn.configure(text="Pause" if self.timer.running else "Start", bg=color)
         self.tray.update_color(color)
+        self.tray.update_status_text(self._tray_status_text())
+
+    def _notify_completion(self, decision: CompletionDecision) -> None:
+        if decision.play_sound:
+            self._play_sound()
+
+    def _schedule_repeat_reminder(self, decision: CompletionDecision) -> None:
+        if not should_schedule_repeat(decision):
+            return
+
+        def fire_repeat_reminder() -> None:
+            self._repeat_reminder.clear()
+            self._notify_completion(decision)
+            if decision.show_toast:
+                self._show_toast()
+
+        reminder_handle = self.root.after(
+            decision.repeat_after_seconds * 1000,
+            fire_repeat_reminder,
+        )
+        self._repeat_reminder.arm(reminder_handle)
+
+    def _cancel_pending_repeat_reminder(self) -> None:
+        self._repeat_reminder.cancel(self.root.after_cancel)
+
+    def _tray_status_text(self) -> str:
+        if not self.timer.settings["show_countdown_in_tray"]:
+            return self.TRAY_TITLE
+        return format_tray_status(
+            PHASE_LABELS[self.timer.phase],
+            self.timer.remaining,
+            self.timer.running,
+        )
 
     # ------------------------------------------------------------------
     # Main loop

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Callable, Optional
 
 from .constants import AppSettings
 
@@ -13,6 +13,26 @@ class CompletionDecision:
     restore_window: bool
     auto_start_next_phase: bool
     repeat_after_seconds: Optional[int]
+
+
+@dataclass(slots=True)
+class ReminderState:
+    pending_handle: object | None = None
+
+    def arm(self, handle: object) -> None:
+        self.pending_handle = handle
+
+    def clear(self) -> object | None:
+        handle = self.pending_handle
+        self.pending_handle = None
+        return handle
+
+    def cancel(self, cancel_callback: Callable[[object], None]) -> bool:
+        handle = self.clear()
+        if handle is None:
+            return False
+        cancel_callback(handle)
+        return True
 
 
 def build_completion_decision(settings: AppSettings) -> CompletionDecision:

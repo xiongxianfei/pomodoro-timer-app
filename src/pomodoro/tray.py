@@ -73,10 +73,14 @@ class TrayIcon:
             self._icon = None
 
     @staticmethod
-    def _wrap(callback: Callable[[], None] | None) -> Callable[[], None]:
+    def _wrap(callback: Callable[[], None] | None) -> Callable[..., None]:
         if callback is None:
-            return lambda: None
-        return callback
+            return lambda *_args, **_kwargs: None
+
+        def wrapped(*_args: Any, **_kwargs: Any) -> None:
+            callback()
+
+        return wrapped
 
     @staticmethod
     def _make_image(color: str) -> Any:

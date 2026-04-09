@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from pomodoro.constants import DEFAULT_SETTINGS
 from pomodoro.completion_policy import (
+    ReminderState,
     build_completion_decision,
     format_tray_status,
     should_schedule_repeat,
@@ -51,6 +52,26 @@ class TestFormatTrayStatus(unittest.TestCase):
     def test_running_work_session_omits_paused_prefix(self):
         text = format_tray_status("Work Session", 12 * 60 + 34, running=True)
         self.assertEqual(text, "Work Session - 12:34 left")
+
+
+class TestReminderState(unittest.TestCase):
+    def test_cancel_pending_reminder_only_once(self):
+        state = ReminderState()
+        canceled = []
+        handle = object()
+
+        state.arm(handle)
+
+        self.assertTrue(state.cancel(canceled.append))
+        self.assertEqual(canceled, [handle])
+        self.assertFalse(state.cancel(canceled.append))
+
+    def test_cancel_without_pending_reminder_is_a_safe_noop(self):
+        state = ReminderState()
+        canceled = []
+
+        self.assertFalse(state.cancel(canceled.append))
+        self.assertEqual(canceled, [])
 
 
 class TestTrayIconContract(unittest.TestCase):
@@ -159,7 +180,7 @@ class TestTrayIconContract(unittest.TestCase):
                 if item is not FakeMenu.SEPARATOR
             ]
             for item in actionable_items:
-                item.action()
+                item.action(object(), object())
             self.assertEqual(
                 updates,
                 ["show", "toggle", "skip", "reset", "add", "settings", "quit"],
