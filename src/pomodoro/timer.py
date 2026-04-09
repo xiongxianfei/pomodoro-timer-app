@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Callable, cast
+from typing import Callable, Mapping, cast
 
 from .constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK, AppSettings
 
@@ -22,8 +22,9 @@ class PomodoroTimer:
         on_tick: Callable[[], None] | None = None,
         on_complete: Callable[[], None] | None = None,
     ) -> None:
-        self.settings: AppSettings = (
-            settings if settings is not None else cast(AppSettings, DEFAULT_SETTINGS.copy())
+        self.settings: AppSettings = cast(
+            AppSettings,
+            settings.copy() if settings is not None else DEFAULT_SETTINGS.copy(),
         )
         self.phase: str = WORK
         self.pomodoros_done: int = 0
@@ -67,8 +68,10 @@ class PomodoroTimer:
             self.phase = WORK
         self.remaining = self._phase_seconds()
 
-    def apply_settings(self, new_settings: AppSettings) -> None:
-        self.settings.update(new_settings)
+    def apply_settings(self, new_settings: Mapping[str, object]) -> None:
+        updated = cast(dict[str, object], self.settings.copy())
+        updated.update(new_settings)
+        self.settings = cast(AppSettings, updated)
         self.remaining = self._phase_seconds()
 
     @property
@@ -89,7 +92,9 @@ class PomodoroTimer:
             return self.settings["work_minutes"] * 60
         if self.phase == SHORT_BREAK:
             return self.settings["short_break_minutes"] * 60
-        return self.settings["long_break_minutes"] * 60
+        if self.phase == LONG_BREAK:
+            return self.settings["long_break_minutes"] * 60
+        raise ValueError(f"Unknown phase: {self.phase}")
 
     def _countdown(self, stop_event: threading.Event) -> None:
         while not stop_event.is_set() and self.remaining > 0:

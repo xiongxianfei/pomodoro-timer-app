@@ -1,4 +1,9 @@
+from pathlib import Path
+import sys
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
 from pomodoro.timer import PomodoroTimer
 from pomodoro.constants import WORK, SHORT_BREAK, LONG_BREAK
 
@@ -115,6 +120,18 @@ class TestApplySettings(unittest.TestCase):
         original_short = self.t.settings["short_break_minutes"]
         self.t.apply_settings({"work_minutes": 50})
         self.assertEqual(self.t.settings["short_break_minutes"], original_short)
+
+    def test_apply_settings_accepts_partial_bool_update(self):
+        self.t.apply_settings({"auto_start_next_phase": False})
+        self.assertFalse(self.t.settings["auto_start_next_phase"])
+
+
+class TestInvalidPhaseHandling(unittest.TestCase):
+    def test_phase_seconds_raises_on_unknown_phase(self):
+        t = PomodoroTimer()
+        t.phase = "invalid_phase"
+        with self.assertRaises(ValueError):
+            t._phase_seconds()
 
 
 class TestSkipAndReset(unittest.TestCase):
