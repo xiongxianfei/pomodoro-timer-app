@@ -9,8 +9,12 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from pomodoro.constants import DEFAULT_SETTINGS, SETTINGS_BOUNDS
+from pomodoro.constants import AppSettings, DEFAULT_SETTINGS, SETTINGS_BOUNDS
 from pomodoro.storage import load_settings, save_settings
+
+
+def _default_settings() -> AppSettings:
+    return DEFAULT_SETTINGS.copy()
 
 
 class TestLoadSettings(unittest.TestCase):
@@ -136,7 +140,7 @@ class TestLoadSettings(unittest.TestCase):
 
 class TestSaveSettings(unittest.TestCase):
     def test_creates_file_and_persists_settings(self) -> None:
-        settings = dict(DEFAULT_SETTINGS)
+        settings = _default_settings()
         settings["work_minutes"] = 35
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "subdir" / "settings.json"
@@ -146,7 +150,7 @@ class TestSaveSettings(unittest.TestCase):
         self.assertEqual(saved["work_minutes"], 35)
 
     def test_roundtrip_load_after_save(self) -> None:
-        settings = dict(DEFAULT_SETTINGS)
+        settings = _default_settings()
         settings["long_break_minutes"] = 20
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "settings.json"
@@ -156,7 +160,7 @@ class TestSaveSettings(unittest.TestCase):
         self.assertEqual(result["long_break_minutes"], 20)
 
     def test_roundtrip_persists_new_setting_fields(self) -> None:
-        settings = dict(DEFAULT_SETTINGS)
+        settings = _default_settings()
         settings.update(
             {
                 "restore_window_on_complete": True,
@@ -184,7 +188,7 @@ class TestSaveSettings(unittest.TestCase):
             # point path at an existing directory — can't write a directory as a file
             path = Path(tmp)
             with patch("pomodoro.storage._config_path", return_value=path):
-                save_settings(dict(DEFAULT_SETTINGS))  # must not raise
+                save_settings(_default_settings())  # must not raise
 
 
 if __name__ == "__main__":
