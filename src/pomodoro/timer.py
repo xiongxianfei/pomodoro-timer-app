@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Callable, Mapping, cast
+from typing import Callable, cast
 
-from .constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK, AppSettings
+from .constants import (
+    DEFAULT_SETTINGS,
+    WORK,
+    SHORT_BREAK,
+    LONG_BREAK,
+    AppSettings,
+    TimerSettingsUpdate,
+)
 
 
 class PomodoroTimer:
@@ -68,11 +75,14 @@ class PomodoroTimer:
             self.phase = WORK
         self.remaining = self._phase_seconds()
 
-    def apply_settings(self, new_settings: Mapping[str, object]) -> None:
-        updated = cast(dict[str, object], self.settings.copy())
+    def apply_settings(self, new_settings: TimerSettingsUpdate) -> None:
+        old_settings = self.settings.copy()
+        updated = self.settings.copy()
         updated.update(new_settings)
+        duration_changed = self._duration_settings_changed(new_settings, old_settings)
         self.settings = cast(AppSettings, updated)
-        self.remaining = self._phase_seconds()
+        if duration_changed:
+            self.remaining = self._phase_seconds()
 
     @property
     def session_display(self) -> tuple[int, int]:
@@ -95,6 +105,23 @@ class PomodoroTimer:
         if self.phase == LONG_BREAK:
             return self.settings["long_break_minutes"] * 60
         raise ValueError(f"Unknown phase: {self.phase}")
+
+    def _duration_settings_changed(
+        self,
+        new_settings: TimerSettingsUpdate,
+        old_settings: AppSettings,
+    ) -> bool:
+        if "work_minutes" in new_settings and new_settings["work_minutes"] != old_settings["work_minutes"]:
+            return True
+        if "short_break_minutes" in new_settings and new_settings["short_break_minutes"] != old_settings["short_break_minutes"]:
+            return True
+        if "long_break_minutes" in new_settings and new_settings["long_break_minutes"] != old_settings["long_break_minutes"]:
+            return True
+        if "long_break_after" in new_settings and new_settings["long_break_after"] != old_settings["long_break_after"]:
+            return True
+        if "repeat_after_minutes" in new_settings and new_settings["repeat_after_minutes"] != old_settings["repeat_after_minutes"]:
+            return True
+        return False
 
     def _countdown(self, stop_event: threading.Event) -> None:
         while not stop_event.is_set() and self.remaining > 0:

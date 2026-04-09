@@ -122,7 +122,9 @@ class TestApplySettings(unittest.TestCase):
         self.assertEqual(self.t.settings["short_break_minutes"], original_short)
 
     def test_apply_settings_accepts_partial_bool_update(self):
+        self.t.remaining = 123
         self.t.apply_settings({"auto_start_next_phase": False})
+        self.assertEqual(self.t.remaining, 123)
         self.assertFalse(self.t.settings["auto_start_next_phase"])
 
 

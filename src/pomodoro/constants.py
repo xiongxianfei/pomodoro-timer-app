@@ -36,13 +36,17 @@ class AppSettings(TypedDict):
     show_countdown_in_tray: bool
 
 
-INT_SETTINGS: tuple[str, ...] = (
-    "work_minutes",
-    "short_break_minutes",
-    "long_break_minutes",
-    "long_break_after",
-    "repeat_after_minutes",
-)
+class TimerSettingsUpdate(TypedDict, total=False):
+    work_minutes: int
+    short_break_minutes: int
+    long_break_minutes: int
+    long_break_after: int
+    restore_window_on_complete: bool
+    notification_mode: NotificationMode
+    repeat_after_minutes: int
+    auto_start_next_phase: bool
+    minimize_to_tray_on_close: bool
+    show_countdown_in_tray: bool
 
 BOOL_SETTINGS: tuple[str, ...] = (
     "restore_window_on_complete",
