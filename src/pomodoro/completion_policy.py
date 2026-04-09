@@ -6,7 +6,7 @@ from typing import Callable, Optional
 from .constants import AppSettings
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CompletionDecision:
     play_sound: bool
     show_toast: bool
@@ -15,7 +15,7 @@ class CompletionDecision:
     repeat_after_seconds: Optional[int]
 
 
-@dataclass(slots=True)
+@dataclass
 class ReminderState:
     pending_handle: object | None = None
 
