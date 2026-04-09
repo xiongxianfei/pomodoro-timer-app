@@ -56,13 +56,16 @@ class PomodoroTimer:
         self._stop_event.set()
         self.running = False
 
+    def add_minutes(self, minutes: int) -> None:
+        self.remaining += minutes * 60
+
     def skip(self) -> None:
         self.stop()
         self.advance_phase()
 
     def reset(self) -> None:
         self.stop()
-        self.remaining = self._phase_seconds()
+        self.remaining = self.current_phase_duration
 
     def advance_phase(self) -> None:
         if self.phase == WORK:
@@ -79,10 +82,9 @@ class PomodoroTimer:
         old_settings = self.settings.copy()
         updated = self.settings.copy()
         updated.update(new_settings)
-        duration_changed = self._duration_settings_changed(new_settings, old_settings)
         self.settings = cast(AppSettings, updated)
-        if duration_changed:
-            self.remaining = self._phase_seconds()
+        if self._current_phase_duration_changed(old_settings, self.settings):
+            self.remaining = self.current_phase_duration
 
     @property
     def session_display(self) -> tuple[int, int]:
@@ -92,6 +94,10 @@ class PomodoroTimer:
         if done == 0:
             done = n if self.pomodoros_done > 0 else 0
         return done, n
+
+    @property
+    def current_phase_duration(self) -> int:
+        return self._phase_seconds()
 
     # ------------------------------------------------------------------
     # Internal
@@ -106,22 +112,18 @@ class PomodoroTimer:
             return self.settings["long_break_minutes"] * 60
         raise ValueError(f"Unknown phase: {self.phase}")
 
-    def _duration_settings_changed(
+    def _current_phase_duration_changed(
         self,
-        new_settings: TimerSettingsUpdate,
         old_settings: AppSettings,
+        new_settings: AppSettings,
     ) -> bool:
-        if "work_minutes" in new_settings and new_settings["work_minutes"] != old_settings["work_minutes"]:
-            return True
-        if "short_break_minutes" in new_settings and new_settings["short_break_minutes"] != old_settings["short_break_minutes"]:
-            return True
-        if "long_break_minutes" in new_settings and new_settings["long_break_minutes"] != old_settings["long_break_minutes"]:
-            return True
-        if "long_break_after" in new_settings and new_settings["long_break_after"] != old_settings["long_break_after"]:
-            return True
-        if "repeat_after_minutes" in new_settings and new_settings["repeat_after_minutes"] != old_settings["repeat_after_minutes"]:
-            return True
-        return False
+        if self.phase == WORK:
+            return new_settings["work_minutes"] != old_settings["work_minutes"]
+        if self.phase == SHORT_BREAK:
+            return new_settings["short_break_minutes"] != old_settings["short_break_minutes"]
+        if self.phase == LONG_BREAK:
+            return new_settings["long_break_minutes"] != old_settings["long_break_minutes"]
+        raise ValueError(f"Unknown phase: {self.phase}")
 
     def _countdown(self, stop_event: threading.Event) -> None:
         while not stop_event.is_set() and self.remaining > 0:
