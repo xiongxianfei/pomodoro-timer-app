@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Callable
+from typing import Callable, cast
 
-from .constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK
+from .constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK, AppSettings
 
 
 class PomodoroTimer:
@@ -18,11 +18,13 @@ class PomodoroTimer:
 
     def __init__(
         self,
-        settings: dict[str, int] | None = None,
+        settings: AppSettings | None = None,
         on_tick: Callable[[], None] | None = None,
         on_complete: Callable[[], None] | None = None,
     ) -> None:
-        self.settings: dict[str, int] = settings if settings is not None else dict(DEFAULT_SETTINGS)
+        self.settings: AppSettings = (
+            settings if settings is not None else cast(AppSettings, DEFAULT_SETTINGS.copy())
+        )
         self.phase: str = WORK
         self.pomodoros_done: int = 0
         self.running: bool = False
@@ -65,7 +67,7 @@ class PomodoroTimer:
             self.phase = WORK
         self.remaining = self._phase_seconds()
 
-    def apply_settings(self, new_settings: dict[str, int]) -> None:
+    def apply_settings(self, new_settings: AppSettings) -> None:
         self.settings.update(new_settings)
         self.remaining = self._phase_seconds()
 
@@ -83,12 +85,11 @@ class PomodoroTimer:
     # ------------------------------------------------------------------
 
     def _phase_seconds(self) -> int:
-        key_map: dict[str, str] = {
-            WORK: "work_minutes",
-            SHORT_BREAK: "short_break_minutes",
-            LONG_BREAK: "long_break_minutes",
-        }
-        return self.settings[key_map[self.phase]] * 60
+        if self.phase == WORK:
+            return self.settings["work_minutes"] * 60
+        if self.phase == SHORT_BREAK:
+            return self.settings["short_break_minutes"] * 60
+        return self.settings["long_break_minutes"] * 60
 
     def _countdown(self, stop_event: threading.Event) -> None:
         while not stop_event.is_set() and self.remaining > 0:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 APP_VERSION: str = "1.0.4"
 
@@ -52,7 +52,7 @@ BOOL_SETTINGS: tuple[str, ...] = (
 )
 
 
-DEFAULT_SETTINGS: dict[str, Any] = {
+DEFAULT_SETTINGS: AppSettings = {
     "work_minutes": 25,
     "short_break_minutes": 5,
     "long_break_minutes": 15,
