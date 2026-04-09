@@ -3,20 +3,19 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import cast
 
 from .constants import (
+    BOOL_SETTINGS,
     DEFAULT_SETTINGS,
     NOTIFICATION_MODES,
     SETTINGS_BOUNDS,
     AppSettings,
 )
 
-BOOL_SETTINGS = (
-    "restore_window_on_complete",
-    "auto_start_next_phase",
-    "minimize_to_tray_on_close",
-    "show_countdown_in_tray",
-)
+
+def _copy_default_settings() -> AppSettings:
+    return cast(AppSettings, dict(DEFAULT_SETTINGS))
 
 
 def _config_path() -> Path:
@@ -31,17 +30,17 @@ def load_settings() -> AppSettings:
     """Load settings from disk, falling back to defaults on any error."""
     path = _config_path()
     if not path.exists():
-        return dict(DEFAULT_SETTINGS)
+        return _copy_default_settings()
     try:
         with open(path) as f:
             data: object = json.load(f)
     except (json.JSONDecodeError, OSError):
-        return dict(DEFAULT_SETTINGS)
+        return _copy_default_settings()
 
     if not isinstance(data, dict):
-        return dict(DEFAULT_SETTINGS)
+        return _copy_default_settings()
 
-    result: AppSettings = dict(DEFAULT_SETTINGS)
+    result: dict[str, object] = dict(DEFAULT_SETTINGS)
     for key, (lo, hi) in SETTINGS_BOUNDS.items():
         value = data.get(key)
         if isinstance(value, int) and not isinstance(value, bool):
@@ -53,7 +52,7 @@ def load_settings() -> AppSettings:
     value = data.get("notification_mode")
     if isinstance(value, str) and value in NOTIFICATION_MODES:
         result["notification_mode"] = value
-    return result
+    return cast(AppSettings, result)
 
 
 def save_settings(settings: AppSettings) -> None:

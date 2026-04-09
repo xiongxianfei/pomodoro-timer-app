@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 APP_VERSION: str = "1.0.4"
 
@@ -36,7 +36,23 @@ class AppSettings(TypedDict):
     show_countdown_in_tray: bool
 
 
-DEFAULT_SETTINGS: AppSettings = {
+INT_SETTINGS: tuple[str, ...] = (
+    "work_minutes",
+    "short_break_minutes",
+    "long_break_minutes",
+    "long_break_after",
+    "repeat_after_minutes",
+)
+
+BOOL_SETTINGS: tuple[str, ...] = (
+    "restore_window_on_complete",
+    "auto_start_next_phase",
+    "minimize_to_tray_on_close",
+    "show_countdown_in_tray",
+)
+
+
+DEFAULT_SETTINGS: dict[str, Any] = {
     "work_minutes": 25,
     "short_break_minutes": 5,
     "long_break_minutes": 15,

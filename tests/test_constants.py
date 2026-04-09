@@ -1,7 +1,18 @@
+from pathlib import Path
+import sys
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
 from pomodoro.constants import (
-    WORK, SHORT_BREAK, LONG_BREAK,
-    PHASE_LABELS, PHASE_COLORS, DEFAULT_SETTINGS, SETTINGS_BOUNDS,
+    WORK,
+    SHORT_BREAK,
+    LONG_BREAK,
+    BOOL_SETTINGS,
+    PHASE_LABELS,
+    PHASE_COLORS,
+    DEFAULT_SETTINGS,
+    SETTINGS_BOUNDS,
 )
 
 
@@ -63,6 +74,10 @@ class TestDefaultSettings(unittest.TestCase):
     def test_repeat_after_minutes_is_bounded(self):
         self.assertIn("repeat_after_minutes", SETTINGS_BOUNDS)
         self.assertEqual(SETTINGS_BOUNDS["repeat_after_minutes"], (1, 10))
+
+    def test_schema_covers_all_default_settings(self):
+        handled_keys = set(SETTINGS_BOUNDS) | set(BOOL_SETTINGS) | {"notification_mode"}
+        self.assertEqual(set(DEFAULT_SETTINGS), handled_keys)
 
     def test_work_duration_is_standard(self):
         self.assertEqual(DEFAULT_SETTINGS["work_minutes"], 25)
