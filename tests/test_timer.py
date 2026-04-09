@@ -1,4 +1,9 @@
+from pathlib import Path
+import sys
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
 from pomodoro.timer import PomodoroTimer
 from pomodoro.constants import WORK, SHORT_BREAK, LONG_BREAK
 
@@ -116,6 +121,56 @@ class TestApplySettings(unittest.TestCase):
         self.t.apply_settings({"work_minutes": 50})
         self.assertEqual(self.t.settings["short_break_minutes"], original_short)
 
+    def test_apply_settings_accepts_partial_bool_update(self):
+        self.t.remaining = 123
+        self.t.apply_settings({"auto_start_next_phase": False})
+        self.assertEqual(self.t.remaining, 123)
+        self.assertFalse(self.t.settings["auto_start_next_phase"])
+
+    def test_non_current_phase_duration_updates_do_not_reset_work_remaining(self):
+        self.t.remaining = 123
+        self.t.apply_settings({"short_break_minutes": 7})
+        self.assertEqual(self.t.remaining, 123)
+        self.t.apply_settings({"long_break_minutes": 20})
+        self.assertEqual(self.t.remaining, 123)
+        self.t.apply_settings({"repeat_after_minutes": 3})
+        self.assertEqual(self.t.remaining, 123)
+
+
+class TestAddMinutes(unittest.TestCase):
+    def setUp(self):
+        self.t = PomodoroTimer()
+
+    def test_add_minutes_extends_remaining_time(self):
+        self.t.remaining = 10
+        self.t.add_minutes(1)
+        self.assertEqual(self.t.remaining, 70)
+
+    def test_add_minutes_accepts_multiple_minutes(self):
+        self.t.remaining = 10
+        self.t.add_minutes(3)
+        self.assertEqual(self.t.remaining, 190)
+
+
+class TestCurrentPhaseDuration(unittest.TestCase):
+    def setUp(self):
+        self.t = PomodoroTimer()
+
+    def test_current_phase_duration_reflects_work_phase(self):
+        self.assertEqual(self.t.current_phase_duration, self.t.settings["work_minutes"] * 60)
+
+    def test_current_phase_duration_reflects_break_phase(self):
+        self.t.advance_phase()
+        self.assertEqual(self.t.current_phase_duration, self.t.settings["short_break_minutes"] * 60)
+
+
+class TestInvalidPhaseHandling(unittest.TestCase):
+    def test_phase_seconds_raises_on_unknown_phase(self):
+        t = PomodoroTimer()
+        t.phase = "invalid_phase"
+        with self.assertRaises(ValueError):
+            t._phase_seconds()
+
 
 class TestSkipAndReset(unittest.TestCase):
     def setUp(self):
@@ -129,6 +184,12 @@ class TestSkipAndReset(unittest.TestCase):
         self.t.remaining = 10
         self.t.reset()
         self.assertEqual(self.t.remaining, self.t.settings["work_minutes"] * 60)
+
+    def test_reset_uses_current_phase_duration(self):
+        self.t.advance_phase()
+        self.t.remaining = 10
+        self.t.reset()
+        self.assertEqual(self.t.remaining, self.t.settings["short_break_minutes"] * 60)
 
     def test_reset_stays_in_same_phase(self):
         self.t.reset()

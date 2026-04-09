@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import threading
 import time
-from typing import Callable
+from typing import Callable, cast
 
-from .constants import DEFAULT_SETTINGS, WORK, SHORT_BREAK, LONG_BREAK
+from .constants import (
+    DEFAULT_SETTINGS,
+    WORK,
+    SHORT_BREAK,
+    LONG_BREAK,
+    AppSettings,
+    TimerSettingsUpdate,
+)
 
 
 class PomodoroTimer:
@@ -18,11 +25,14 @@ class PomodoroTimer:
 
     def __init__(
         self,
-        settings: dict[str, int] | None = None,
+        settings: AppSettings | None = None,
         on_tick: Callable[[], None] | None = None,
         on_complete: Callable[[], None] | None = None,
     ) -> None:
-        self.settings: dict[str, int] = settings if settings is not None else dict(DEFAULT_SETTINGS)
+        self.settings: AppSettings = cast(
+            AppSettings,
+            settings.copy() if settings is not None else DEFAULT_SETTINGS.copy(),
+        )
         self.phase: str = WORK
         self.pomodoros_done: int = 0
         self.running: bool = False
@@ -46,13 +56,16 @@ class PomodoroTimer:
         self._stop_event.set()
         self.running = False
 
+    def add_minutes(self, minutes: int) -> None:
+        self.remaining += minutes * 60
+
     def skip(self) -> None:
         self.stop()
         self.advance_phase()
 
     def reset(self) -> None:
         self.stop()
-        self.remaining = self._phase_seconds()
+        self.remaining = self.current_phase_duration
 
     def advance_phase(self) -> None:
         if self.phase == WORK:
@@ -65,9 +78,13 @@ class PomodoroTimer:
             self.phase = WORK
         self.remaining = self._phase_seconds()
 
-    def apply_settings(self, new_settings: dict[str, int]) -> None:
-        self.settings.update(new_settings)
-        self.remaining = self._phase_seconds()
+    def apply_settings(self, new_settings: TimerSettingsUpdate) -> None:
+        old_settings = self.settings.copy()
+        updated = self.settings.copy()
+        updated.update(new_settings)
+        self.settings = cast(AppSettings, updated)
+        if self._current_phase_duration_changed(old_settings, self.settings):
+            self.remaining = self.current_phase_duration
 
     @property
     def session_display(self) -> tuple[int, int]:
@@ -78,17 +95,35 @@ class PomodoroTimer:
             done = n if self.pomodoros_done > 0 else 0
         return done, n
 
+    @property
+    def current_phase_duration(self) -> int:
+        return self._phase_seconds()
+
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
 
     def _phase_seconds(self) -> int:
-        key_map: dict[str, str] = {
-            WORK: "work_minutes",
-            SHORT_BREAK: "short_break_minutes",
-            LONG_BREAK: "long_break_minutes",
-        }
-        return self.settings[key_map[self.phase]] * 60
+        if self.phase == WORK:
+            return self.settings["work_minutes"] * 60
+        if self.phase == SHORT_BREAK:
+            return self.settings["short_break_minutes"] * 60
+        if self.phase == LONG_BREAK:
+            return self.settings["long_break_minutes"] * 60
+        raise ValueError(f"Unknown phase: {self.phase}")
+
+    def _current_phase_duration_changed(
+        self,
+        old_settings: AppSettings,
+        new_settings: AppSettings,
+    ) -> bool:
+        if self.phase == WORK:
+            return new_settings["work_minutes"] != old_settings["work_minutes"]
+        if self.phase == SHORT_BREAK:
+            return new_settings["short_break_minutes"] != old_settings["short_break_minutes"]
+        if self.phase == LONG_BREAK:
+            return new_settings["long_break_minutes"] != old_settings["long_break_minutes"]
+        raise ValueError(f"Unknown phase: {self.phase}")
 
     def _countdown(self, stop_event: threading.Event) -> None:
         while not stop_event.is_set() and self.remaining > 0:

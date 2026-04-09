@@ -7,6 +7,16 @@ A lightweight desktop Pomodoro Timer for Windows 11, built with Python and tkint
 
 ![Pomodoro Timer screenshot](docs/screenshot.png)
 
+## Current Behavior
+
+The current app is optimized for background-first daily use:
+
+- Completion alerts are configurable: `toast`, `toast + sound`, or `toast + sound + repeat once`
+- The next phase can auto-start or wait after completion
+- The window only restores on completion if you enable it
+- Tray-first controls are available for the most common actions
+- Background behavior settings do not force the timer back to a full duration
+
 ## Features
 
 - **Pomodoro cycle** — 25-min work sessions alternate with short breaks; every 4th session triggers a long break
@@ -82,7 +92,11 @@ Output: `Output/PomodoroTimer-Setup-1.0.4.exe`
 | **Reset** | Restart the current phase's countdown |
 | **Settings** | Open the settings dialog |
 
+Tray menu actions: `Show Window`, `Start / Pause`, `Skip`, `Reset`, `+1 minute`, `Settings`, `Quit`.
+
 ### System Tray
+
+In addition to the original tray behavior, the tray menu now supports `Skip`, `Reset`, `+1 minute`, and direct access to `Settings`. The tray title can also show a live countdown when that option is enabled.
 
 - **Close (X)** — hides the window; the timer continues running in the background
 - **Tray icon double-click** — restores the window
@@ -100,6 +114,15 @@ Click **Settings** to adjust:
 | Long break after N sessions | 4 | 1 – 10 |
 
 Settings are validated on save and persisted to `%APPDATA%\pomodoro\settings.json`. They take effect immediately and reset the current phase to the new duration.
+
+Additional background settings now available:
+
+- Repeat reminder after: `1 - 10` minutes, default `2`
+- Completion notification mode
+- Restore window on completion
+- Start next phase automatically
+- Minimize to tray on close
+- Show live countdown text in the tray
 
 ## Project Structure
 
